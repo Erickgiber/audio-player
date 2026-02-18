@@ -160,29 +160,71 @@ function createPlayerStore() {
 			}
 			update(state => ({ ...state, volume }));
 		},
-		next: () => {
+		next: async () => {
 			const tracks = get(library);
-			update(state => {
-				if (tracks.length === 0 || state.currentTrackIndex === -1) return state;
-				const nextIndex = (state.currentTrackIndex + 1) % tracks.length;
-				const nextTrack = tracks[nextIndex];
-				if (nextTrack) {
-					player.playTrack(nextTrack, nextIndex);
+			const currentState = get({ subscribe });
+			if (tracks.length === 0 || currentState.currentTrackIndex === -1) return;
+			
+			const nextIndex = (currentState.currentTrackIndex + 1) % tracks.length;
+			const nextTrack = tracks[nextIndex];
+			if (nextTrack) {
+				// Directly handle track loading without calling playTrack
+				revokeCurrentUrl();
+				
+				if (!nextTrack.filePath) return;
+				
+				const blob = await storageManager.loadTrackFile(nextTrack.filePath);
+				if (!blob) return;
+				
+				const url = URL.createObjectURL(blob);
+				currentObjectUrl = url;
+				
+				update(state => ({
+					...state,
+					currentTrack: nextTrack,
+					currentTrackIndex: nextIndex,
+					audioUrl: url,
+					currentTime: 0
+				}));
+				
+				if (audioElement) {
+					audioElement.src = url;
+					await audioElement.play();
 				}
-				return state;
-			});
+			}
 		},
-		previous: () => {
+		previous: async () => {
 			const tracks = get(library);
-			update(state => {
-				if (tracks.length === 0 || state.currentTrackIndex === -1) return state;
-				const prevIndex = state.currentTrackIndex - 1 < 0 ? tracks.length - 1 : state.currentTrackIndex - 1;
-				const prevTrack = tracks[prevIndex];
-				if (prevTrack) {
-					player.playTrack(prevTrack, prevIndex);
+			const currentState = get({ subscribe });
+			if (tracks.length === 0 || currentState.currentTrackIndex === -1) return;
+			
+			const prevIndex = currentState.currentTrackIndex - 1 < 0 ? tracks.length - 1 : currentState.currentTrackIndex - 1;
+			const prevTrack = tracks[prevIndex];
+			if (prevTrack) {
+				// Directly handle track loading without calling playTrack
+				revokeCurrentUrl();
+				
+				if (!prevTrack.filePath) return;
+				
+				const blob = await storageManager.loadTrackFile(prevTrack.filePath);
+				if (!blob) return;
+				
+				const url = URL.createObjectURL(blob);
+				currentObjectUrl = url;
+				
+				update(state => ({
+					...state,
+					currentTrack: prevTrack,
+					currentTrackIndex: prevIndex,
+					audioUrl: url,
+					currentTime: 0
+				}));
+				
+				if (audioElement) {
+					audioElement.src = url;
+					await audioElement.play();
 				}
-				return state;
-			});
+			}
 		},
 		cleanup: () => {
 			revokeCurrentUrl();

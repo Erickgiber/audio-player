@@ -75,7 +75,6 @@
 		bind:this={folderInput}
 		type="file"
 		webkitdirectory
-		directory
 		multiple
 		onchange={handleFileSelect}
 		style="display: none;"

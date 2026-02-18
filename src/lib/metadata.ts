@@ -11,7 +11,9 @@ export async function extractMetadata(file: File, trackId: string): Promise<Trac
 		let coverArt: string | undefined;
 		if (metadata.common.picture && metadata.common.picture.length > 0) {
 			const picture = metadata.common.picture[0];
-			const blob = new Blob([picture.data.buffer], { type: picture.format });
+			// Create a new Uint8Array from the data to ensure proper type
+			const imageData = new Uint8Array(picture.data);
+			const blob = new Blob([imageData], { type: picture.format });
 			coverArt = await storageManager.saveCoverArt(trackId, blob);
 		}
 
@@ -53,7 +55,7 @@ export async function processBatch(
 	for (let i = 0; i < files.length; i += batchSize) {
 		const batch = files.slice(i, i + batchSize);
 		const batchPromises = batch.map((file, idx) => {
-			const trackId = `${Date.now()}-${i + idx}-${Math.random().toString(36).substr(2, 9)}`;
+			const trackId = `${Date.now()}-${i + idx}-${Math.random().toString(36).slice(2, 11)}`;
 			return extractMetadata(file, trackId);
 		});
 
