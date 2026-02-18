@@ -26,7 +26,7 @@
 
 		const handleEnded = () => {
 			player.setPlaying(false);
-			// TODO: Auto-play next track
+			player.next(); // Auto-play next track
 		};
 
 		audioElement.addEventListener('timeupdate', handleTimeUpdate);

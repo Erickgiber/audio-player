@@ -1,4 +1,4 @@
-import { writable, derived } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 import type { Track, Library } from './types';
 import { storageManager } from './storage';
 
@@ -161,10 +161,28 @@ function createPlayerStore() {
 			update(state => ({ ...state, volume }));
 		},
 		next: () => {
-			// Will be implemented with library integration
+			const tracks = get(library);
+			update(state => {
+				if (tracks.length === 0 || state.currentTrackIndex === -1) return state;
+				const nextIndex = (state.currentTrackIndex + 1) % tracks.length;
+				const nextTrack = tracks[nextIndex];
+				if (nextTrack) {
+					player.playTrack(nextTrack, nextIndex);
+				}
+				return state;
+			});
 		},
 		previous: () => {
-			// Will be implemented with library integration
+			const tracks = get(library);
+			update(state => {
+				if (tracks.length === 0 || state.currentTrackIndex === -1) return state;
+				const prevIndex = state.currentTrackIndex - 1 < 0 ? tracks.length - 1 : state.currentTrackIndex - 1;
+				const prevTrack = tracks[prevIndex];
+				if (prevTrack) {
+					player.playTrack(prevTrack, prevIndex);
+				}
+				return state;
+			});
 		},
 		cleanup: () => {
 			revokeCurrentUrl();
